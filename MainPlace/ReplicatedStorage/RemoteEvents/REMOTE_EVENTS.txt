@@ -1,0 +1,9 @@
+Create these RemoteEvents in MainPlace (ReplicatedStorage/RemoteEvents):
+RequestCraft
+RequestPurchaseShip
+RequestStartQuiz
+SubmitQuizAnswer
+DonateMuseumItem
+CollectOre
+CollectNode
+RequestTeleportMoon

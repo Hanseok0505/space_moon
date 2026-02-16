@@ -1,0 +1,12 @@
+# OS
+Thumbs.db
+.DS_Store
+
+# Editor / IDE
+.vscode/
+*.swp
+*.swo
+*~
+
+# Roblox
+*.rbxlx.lock

@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" version="4">
+<Item class="DataModel" referent="RBX0">
+<Properties>
+<string name="Name">MoonPlace</string>
+</Properties>
+<Item class="ReplicatedStorage" referent="RBX1">
+<Properties>
+<string name="Name">ReplicatedStorage</string>
+</Properties>
+<Item class="Folder" referent="RBX2">
+<Properties>
+<string name="Name">Shared</string>
+</Properties>
+<Item class="ModuleScript" referent="RBX3">
+<Properties>
+<string name="Name">ItemsConfig</string>
+<bool name="Disabled">false</bool>
+<ProtectedString name="Source"><![CDATA[local Items = {
+  CURRENCY_NAME = "Cash",
+  Materials = {
+    ["IronOre"] = {displayName="Iron Ore", value=5},
+    ["TitaniumOre"] = {displayName="Titanium Ore", value=15},
+    ["FuelCell"] = {displayName="Fuel Cell", value=50},
+    ["EngineCore"] = {displayName="Engine Core", value=150},
+    ["HullPlate"] = {displayName="Hull Plate", value=40},
+    ["LunarSample"] = {displayName="Lunar Sample", value=250},
+  }
+}
+return Items
+]]></ProtectedString>
+</Properties>
+</Item>
+<Item class="ModuleScript" referent="RBX4">
+<Properties>
+<string name="Name">QuizzesConfig</string>
+<bool name="Disabled">false</bool>
+<ProtectedString name="Source"><![CDATA[local Quizzes = {
+  Pool = {
+    {q="태양계에서 가장 큰 행성은?", a="목성", rewardCash=100, rewardItem="FuelCell"},
+    {q="달의 바다는 실제로 물이 아니라 무엇의 흔적일까?", a="현무암용암", rewardCash=120, rewardItem="HullPlate"},
+    {q="달 착륙선이 최초로 착륙한 해는?", a="1969", rewardCash=200, rewardItem="EngineCore"},
+  },
+}
+return Quizzes
+]]></ProtectedString>
+</Properties>
+</Item>
+<Item class="ModuleScript" referent="RBX5">
+<Properties>
+<string name="Name">DropRatesConfig</string>
+<bool name="Disabled">false</bool>
+<ProtectedString name="Source"><![CDATA[local Drops = {
+  IronNode = {
+    {item="IronOre", chance=0.85, amount={min=1,max=2}},
+    {item="TitaniumOre", chance=0.10, amount={min=1,max=1}},
+    {item="FuelCell", chance=0.05, amount={min=1,max=1}},
+  },
+  TitaniumNode = {
+    {item="TitaniumOre", chance=0.75, amount={min=1,max=2}},
+    {item="IronOre", chance=0.20, amount={min=1,max=2}},
+    {item="EngineCore", chance=0.05, amount={min=1,max=1}},
+  },
+  LunarNode = {
+    {item="LunarSample", chance=0.60, amount={min=1,max=1}},
+    {item="TitaniumOre", chance=0.25, amount={min=1,max=2}},
+    {item="FuelCell", chance=0.15, amount={min=1,max=1}},
+  }
+}
+return Drops
+]]></ProtectedString>
+</Properties>
+</Item>
+</Item>
+<Item class="Folder" referent="RBX6">
+<Properties>
+<string name="Name">RemoteEvents</string>
+</Properties>
+<Item class="RemoteEvent" referent="RBX7">
+<Properties>
+<string name="Name">RequestTeleportBack</string>
+</Properties>
+</Item>
+</Item>
+</Item>
+<Item class="ServerScriptService" referent="RBX8">
+<Properties>
+<string name="Name">ServerScriptService</string>
+</Properties>
+<Item class="Script" referent="RBX9">
+<Properties>
+<string name="Name">MoonServer</string>
+<bool name="Disabled">false</bool>
+<ProtectedString name="Source"><![CDATA[-- ServerScriptService/MoonServer.server.lua
+local Players = game:GetService("Players")
+local DataStoreService = game:GetService("DataStoreService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TeleportService = game:GetService("TeleportService")
+local Workspace = game:GetService("Workspace")
+
+local Remotes = ReplicatedStorage:WaitForChild("RemoteEvents")
+local RequestTeleportBack = Remotes:WaitForChild("RequestTeleportBack")
+
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local ItemsConfig = require(Shared:WaitForChild("ItemsConfig"))
+local DropRates = require(Shared:WaitForChild("DropRatesConfig"))
+
+local PROFILE_KEY = "SpaceGameProfile_V1"
+local ROOT_PLACE_ID = 0 -- set Main place ID here
+
+local store = DataStoreService:GetDataStore(PROFILE_KEY)
+local Profiles = {}
+
+local function newLeaderstats(plr)
+  local ls=Instance.new("Folder"); ls.Name="leaderstats"; ls.Parent=plr
+  local cash=Instance.new("IntValue"); cash.Name=ItemsConfig.CURRENCY_NAME; cash.Parent=ls
+  return ls
+end
+
+local function loadProfile(plr)
+  local data; pcall(function() data=store:GetAsync(tostring(plr.UserId)) end)
+  data=data or {Cash=0, Inventory={}}
+  Profiles[plr.UserId]=data
+  local ls=newLeaderstats(plr); ls[ItemsConfig.CURRENCY_NAME].Value=data.Cash or 0
+end
+local function saveProfile(plr) local p=Profiles[plr.UserId]; if not p then return end; pcall(function() store:SetAsync(tostring(plr.UserId), p) end) end
+
+Players.PlayerAdded:Connect(loadProfile)
+Players.PlayerRemoving:Connect(function(plr) saveProfile(plr); Profiles[plr.UserId]=nil end)
+game:BindToClose(function() for _,plr in ipairs(Players:GetPlayers()) do saveProfile(plr) end end)
+
+local function rr(a,b) return math.random(a,b) end
+local function chooseDrops(nodeKey)
+  local pool=DropRates[nodeKey]; if not pool then return {} end
+  local out={}
+  for _,e in ipairs(pool) do
+    if math.random()<(e.chance or 0) then table.insert(out, {item=e.item, amount=rr(e.amount.min, e.amount.max)}) end
+  end
+  return out
+end
+
+-- Build a simple moon scene with a return portal and 3 nodes
+local function createPart(name, c, size, pos)
+  local p=Instance.new("Part"); p.Name=name; p.Anchored=true; p.CanCollide=true; p.Size=size; p.Color=c; p.Position=pos; p.Parent=Workspace; return p
+end
+
+local function ensureScene()
+  if Workspace:FindFirstChild("MoonSceneBuilt") then return end
+  local flag=Instance.new("BoolValue"); flag.Name="MoonSceneBuilt"; flag.Parent=Workspace
+  local base=createPart("MoonBase", Color3.fromRGB(200,200,200), Vector3.new(200,2,200), Vector3.new(0,0,0))
+  local portal=createPart("ReturnPortal", Color3.fromRGB(0,170,255), Vector3.new(8,10,1), Vector3.new(0,6,-80)); portal.Material=Enum.Material.Neon
+  local pp=Instance.new("ProximityPrompt"); pp.ActionText="귀환(메인)"; pp.ObjectText="포털"; pp.HoldDuration=0; pp.Parent=portal
+  pp.Triggered:Connect(function(plr) if ROOT_PLACE_ID~=0 then pcall(function() TeleportService:TeleportAsync(ROOT_PLACE_ID,{plr}) end) end end)
+  local posList={Vector3.new(-40,2,30), Vector3.new(20,2,40), Vector3.new(60,2,-10)}
+  for i,pos in ipairs(posList) do
+    local node=createPart("LunarNode_"..i, Color3.fromRGB(240,240,240), Vector3.new(6,6,6), pos); node.Material=Enum.Material.Slate
+    local prompt=Instance.new("ProximityPrompt"); prompt.ActionText="채집"; prompt.ObjectText="월면 광물"; prompt.HoldDuration=0; prompt.Parent=node
+    prompt.Triggered:Connect(function(plr)
+      local prof=Profiles[plr.UserId]; if not prof then return end
+      for _,d in ipairs(chooseDrops("LunarNode")) do
+        if ItemsConfig.Materials[d.item] then prof.Inventory[d.item]=(prof.Inventory[d.item] or 0)+d.amount end
+      end
+      prompt.Enabled=false; task.delay(2,function() prompt.Enabled=true end)
+    end)
+  end
+end
+ensureScene()
+
+-- Return button support
+RequestTeleportBack.OnServerEvent:Connect(function(plr)
+  if ROOT_PLACE_ID==0 then return end
+  pcall(function() TeleportService:TeleportAsync(ROOT_PLACE_ID, {plr}) end)
+end)
+]]></ProtectedString>
+</Properties>
+</Item>
+</Item>
+<Item class="StarterPlayer" referent="RBX10">
+<Properties>
+<string name="Name">StarterPlayer</string>
+</Properties>
+<Item class="StarterPlayerScripts" referent="RBX11">
+<Properties>
+<string name="Name">StarterPlayerScripts</string>
+</Properties>
+<Item class="LocalScript" referent="RBX12">
+<Properties>
+<string name="Name">MoonClient</string>
+<bool name="Disabled">false</bool>
+<ProtectedString name="Source"><![CDATA[-- StarterPlayer/StarterPlayerScripts/MoonClient.client.lua
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+
+local Remotes = ReplicatedStorage:WaitForChild("RemoteEvents")
+local RequestTeleportBack = Remotes:WaitForChild("RequestTeleportBack")
+
+local function ensureGui()
+  local pg=player:WaitForChild("PlayerGui")
+  local HUD=pg:FindFirstChild("MoonHUD")
+  if not HUD then
+    HUD=Instance.new("ScreenGui"); HUD.Name="MoonHUD"; HUD.ResetOnSpawn=false; HUD.Parent=pg
+    local btn=Instance.new("TextButton"); btn.Name="ReturnButton"; btn.Text="메인으로 귀환"; btn.Size=UDim2.new(0,150,0,40); btn.Position=UDim2.new(0,20,0,20); btn.Parent=HUD
+    btn.MouseButton1Click:Connect(function() RequestTeleportBack:FireServer() end)
+  end
+end
+ensureGui()
+]]></ProtectedString>
+</Properties>
+</Item>
+</Item>
+</Item>
+</Item>
+</roblox>

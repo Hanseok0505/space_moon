@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" version="4">
+<Item class="DataModel" referent="RBX0">
+<Properties>
+<string name="Name">MainPlace</string>
+</Properties>
+<Item class="Workspace" referent="RBX1">
+<Properties>
+<string name="Name">Workspace</string>
+</Properties>
+</Item>
+<Item class="ReplicatedStorage" referent="RBX2">
+<Properties>
+<string name="Name">ReplicatedStorage</string>
+</Properties>
+</Item>
+<Item class="ServerScriptService" referent="RBX3">
+<Properties>
+<string name="Name">ServerScriptService</string>
+</Properties>
+</Item>
+<Item class="StarterPlayer" referent="RBX4">
+<Properties>
+<string name="Name">StarterPlayer</string>
+</Properties>
+<Item class="StarterPlayerScripts" referent="RBX5">
+<Properties>
+<string name="Name">StarterPlayerScripts</string>
+</Properties>
+</Item>
+</Item>
+<Item class="Folder" referent="RBX6">
+<Properties>
+<string name="Name">Shared</string>
+</Properties>
+</Item>
+<Item class="Folder" referent="RBX7">
+<Properties>
+<string name="Name">RemoteEvents</string>
+</Properties>
+</Item>
+<Item class="RemoteEvent" referent="RBX8">
+<Properties>
+<string name="Name">RequestCraft</string>
+</Properties>
+</Item>
+<Item class="RemoteEvent" referent="RBX9">
+<Properties>
+<string name="Name">RequestPurchaseShip</string>
+</Properties>
+</Item>
+<Item class="RemoteEvent" referent="RBX10">
+<Properties>
+<string name="Name">RequestStartQuiz</string>
+</Properties>
+</Item>
+<Item class="RemoteEvent" referent="RBX11">
+<Properties>
+<string name="Name">SubmitQuizAnswer</string>
+</Properties>
+</Item>
+<Item class="RemoteEvent" referent="RBX12">
+<Properties>
+<string name="Name">DonateMuseumItem</string>
+</Properties>
+</Item>
+<Item class="RemoteEvent" referent="RBX13">
+<Properties>
+<string name="Name">CollectOre</string>
+</Properties>
+</Item>
+<Item class="RemoteEvent" referent="RBX14">
+<Properties>
+<string name="Name">CollectNode</string>
+</Properties>
+</Item>
+<Item class="RemoteEvent" referent="RBX15">
+<Properties>
+<string name="Name">RequestTeleportMoon</string>
+</Properties>
+</Item>
+<Item class="ModuleScript" referent="RBX16">
+<Properties>
+<string name="Name">ItemsConfig</string>
+<ProtectedString name="Source"><![CDATA[return { CURRENCY_NAME = "Cash", Materials = { IronOre={displayName="Iron Ore",value=5}, TitaniumOre={displayName="Titanium Ore",value=15}, FuelCell={displayName="Fuel Cell",value=50}, EngineCore={displayName="Engine Core",value=150}, HullPlate={displayName="Hull Plate",value=40}, LunarSample={displayName="Lunar Sample",value=250} } }]]></ProtectedString>
+<bool name="Disabled">false</bool>
+</Properties>
+</Item>
+<Item class="ModuleScript" referent="RBX17">
+<Properties>
+<string name="Name">RecipesConfig</string>
+<ProtectedString name="Source"><![CDATA[return { BasicEngine={ cost={IronOre=10,FuelCell=1}, gives={EngineCore=1}, cashCost=100 }, BasicHull={ cost={IronOre=20,HullPlate=5}, gives={HullPlate=10}, cashCost=80 } }]]></ProtectedString>
+<bool name="Disabled">false</bool>
+</Properties>
+</Item>
+<Item class="ModuleScript" referent="RBX18">
+<Properties>
+<string name="Name">ShipsConfig</string>
+<ProtectedString name="Source"><![CDATA[return { Tiers={ {id="Scout-I",price=500,need={EngineCore=1,HullPlate=5},speed=30,cargo=20}, {id="Explorer-II",price=1500,need={EngineCore=2,HullPlate=15,FuelCell=3},speed=50,cargo=40}, {id="Voyager-III",price=5000,need={EngineCore=4,HullPlate=30,FuelCell=10},speed=80,cargo=80}, {id="Lunar-Module",price=15000,need={EngineCore=6,HullPlate=60,FuelCell=20},speed=60,cargo=120,canGoMoon=true} } }]]></ProtectedString>
+<bool name="Disabled">false</bool>
+</Properties>
+</Item>
+<Item class="ModuleScript" referent="RBX19">
+<Properties>
+<string name="Name">QuizzesConfig</string>
+<ProtectedString name="Source"><![CDATA[return { Pool={ {q="태양계에서 가장 큰 행성은?",a="목성",rewardCash=100,rewardItem="FuelCell"}, {q="달의 바다는 실제로 물이 아니라 무엇의 흔적일까?",a="현무암용암",rewardCash=120,rewardItem="HullPlate"}, {q="달 착륙선이 최초로 착륙한 해는?",a="1969",rewardCash=200,rewardItem="EngineCore"} } }]]></ProtectedString>
+<bool name="Disabled">false</bool>
+</Properties>
+</Item>
+<Item class="ModuleScript" referent="RBX20">
+<Properties>
+<string name="Name">DropRatesConfig</string>
+<ProtectedString name="Source"><![CDATA[return { IronNode={ {item="IronOre",chance=0.85,amount={min=1,max=2}}, {item="TitaniumOre",chance=0.10,amount={min=1,max=1}}, {item="FuelCell",chance=0.05,amount={min=1,max=1}} }, TitaniumNode={ {item="TitaniumOre",chance=0.75,amount={min=1,max=2}}, {item="IronOre",chance=0.20,amount={min=1,max=2}}, {item="EngineCore",chance=0.05,amount={min=1,max=1}} }, LunarNode={ {item="LunarSample",chance=0.60,amount={min=1,max=1}}, {item="TitaniumOre",chance=0.25,amount={min=1,max=2}}, {item="FuelCell",chance=0.15,amount={min=1,max=1}} } }]]></ProtectedString>
+<bool name="Disabled">false</bool>
+</Properties>
+</Item>
+<Item class="Script" referent="RBX21">
+<Properties>
+<string name="Name">MainServer</string>
+<ProtectedString name="Source"><![CDATA[-- Main server (static nested)
+local Players=game:GetService("Players"); local DataStoreService=game:GetService("DataStoreService"); local ReplicatedStorage=game:GetService("ReplicatedStorage"); local TeleportService=game:GetService("TeleportService")
+local Remotes=ReplicatedStorage:WaitForChild("RemoteEvents"); local RequestCraft=Remotes:WaitForChild("RequestCraft"); local RequestPurchaseShip=Remotes:WaitForChild("RequestPurchaseShip"); local RequestStartQuiz=Remotes:WaitForChild("RequestStartQuiz"); local SubmitQuizAnswer=Remotes:WaitForChild("SubmitQuizAnswer"); local DonateMuseumItem=Remotes:WaitForChild("DonateMuseumItem"); local CollectOre=Remotes:WaitForChild("CollectOre"); local CollectNode=Remotes:WaitForChild("CollectNode"); local RequestTeleportMoon=Remotes:WaitForChild("RequestTeleportMoon")
+local Shared=ReplicatedStorage:WaitForChild("Shared"); local ItemsConfig=require(Shared:WaitForChild("ItemsConfig")); local RecipesConfig=require(Shared:WaitForChild("RecipesConfig")); local ShipsConfig=require(Shared:WaitForChild("ShipsConfig")); local QuizzesConfig=require(Shared:WaitForChild("QuizzesConfig")); local DropRates=require(Shared:WaitForChild("DropRatesConfig"))
+local PROFILE_KEY="SpaceGameProfile_V1"; local WEEKLY_LEADERBOARD="QuizWeekly_Leaderboard_V1"; local MOON_PLACE_ID=0
+local store=DataStoreService:GetDataStore(PROFILE_KEY); local orderedWeekly=DataStoreService:GetOrderedDataStore(WEEKLY_LEADERBOARD); local function currentWeekNumber() return math.floor(os.time()/604800) end
+local function newProfile() return { Cash=250, Inventory={IronOre=10,TitaniumOre=0,FuelCell=0,EngineCore=0,HullPlate=0,LunarSample=0}, OwnedShips={}, BestQuizScore=0, WeeklyQuizScore=0, LastWeekNumber=currentWeekNumber(), EquippedShip=nil, CanGoMoon=false, LastWeeklyRewardAt=0 } end
+local function getLeaderstats(player) local ls=Instance.new("Folder"); ls.Name="leaderstats"; ls.Parent=player; local cash=Instance.new("IntValue"); cash.Name=ItemsConfig.CURRENCY_NAME; cash.Parent=ls; local score=Instance.new("IntValue"); score.Name="QuizScore"; score.Parent=ls; local wscore=Instance.new("IntValue"); wscore.Name="WeeklyQuiz"; wscore.Parent=ls; return ls end
+local Profiles={}
+local function savePlayer(plr) local p=Profiles[plr.UserId]; if not p then return end; pcall(function() store:SetAsync(tostring(plr.UserId), p) end); pcall(function() orderedWeekly:SetAsync(tostring(plr.UserId), p.WeeklyQuizScore or 0) end) end
+local function grantWeeklyReward(profile) local s=profile.WeeklyQuizScore or 0; local cash=0; if s>=50 then cash=3000 elseif s>=25 then cash=1200 elseif s>=10 then cash=400 elseif s>=1 then cash=100 end; profile.Cash=(profile.Cash or 0)+cash; profile.LastWeeklyRewardAt=currentWeekNumber(); profile.WeeklyQuizScore=0 end
+local function rolloverWeek(profile) local now=currentWeekNumber(); if (profile.LastWeekNumber or now)~=now then if (profile.LastWeeklyRewardAt or -1)<now then grantWeeklyReward(profile) end profile.LastWeekNumber=now end end
+local function loadPlayer(plr) local data; pcall(function() data=store:GetAsync(tostring(plr.UserId)) end); data=data or newProfile(); Profiles[plr.UserId]=data; rolloverWeek(data); local ls=getLeaderstats(plr); ls[ItemsConfig.CURRENCY_NAME].Value=data.Cash or 0; ls.QuizScore.Value=data.BestQuizScore or 0; ls.WeeklyQuiz.Value=data.WeeklyQuizScore or 0 end
+Players.PlayerAdded:Connect(loadPlayer); Players.PlayerRemoving:Connect(function(plr) savePlayer(plr); Profiles[plr.UserId]=nil end); game:BindToClose(function() for _,plr in ipairs(Players:GetPlayers()) do savePlayer(plr) end end)
+local function has(inv, req) for k,v in pairs(req) do if (inv[k] or 0) < v then return false end end return true end
+local function take(inv, req) for k,v in pairs(req) do inv[k]=(inv[k] or 0)-v end end
+RequestCraft.OnServerEvent:Connect(function(plr, id) local p=Profiles[plr.UserId]; if not p then return end; local r=RecipesConfig[id]; if not r then return end; if r.cashCost and p.Cash<r.cashCost then return end; if not has(p.Inventory, r.cost) then return end; if r.cashCost then p.Cash-=r.cashCost end; take(p.Inventory, r.cost); for it,amt in pairs(r.gives) do p.Inventory[it]=(p.Inventory[it] or 0)+amt end; plr.leaderstats[ItemsConfig.CURRENCY_NAME].Value=p.Cash end)
+RequestPurchaseShip.OnServerEvent:Connect(function(plr, id) local p=Profiles[plr.UserId]; if not p then return end; local target; for _,s in ipairs(ShipsConfig.Tiers) do if s.id==id then target=s break end end; if not target then return end; if p.Cash<target.price then return end; if target.need and not has(p.Inventory, target.need) then return end; p.Cash-=target.price; if target.need then take(p.Inventory,target.need) end; table.insert(p.OwnedShips, target.id); p.EquippedShip=target.id; if target.canGoMoon then p.CanGoMoon=true end; plr.leaderstats[ItemsConfig.CURRENCY_NAME].Value=p.Cash end)
+local ActiveQuiz={}
+RequestStartQuiz.OnServerEvent:Connect(function(plr) local pool=require(Shared.QuizzesConfig).Pool; local idx=math.random(1,#pool); ActiveQuiz[plr.UserId]=idx; RequestStartQuiz:FireClient(plr, pool[idx].q) end)
+SubmitQuizAnswer.OnServerEvent:Connect(function(plr, ans) local p=Profiles[plr.UserId]; if not p then return end; local idx=ActiveQuiz[plr.UserId]; if not idx then return end; local q=require(Shared.QuizzesConfig).Pool[idx]; ActiveQuiz[plr.UserId]=nil; local function norm(s) return string.lower((s or ""):gsub("%s+","")) end; local ok=(norm(ans)==norm(q.a)); if ok then p.Cash=(p.Cash or 0)+(q.rewardCash or 100); plr.leaderstats[ItemsConfig.CURRENCY_NAME].Value=p.Cash; if q.rewardItem then p.Inventory[q.rewardItem]=(p.Inventory[q.rewardItem] or 0)+1 end; p.BestQuizScore=(p.BestQuizScore or 0)+1; plr.leaderstats.QuizScore.Value=p.BestQuizScore; p.WeeklyQuizScore=(p.WeeklyQuizScore or 0)+1; plr.leaderstats.WeeklyQuiz.Value=p.WeeklyQuizScore; pcall(function() orderedWeekly:SetAsync(tostring(plr.UserId), p.WeeklyQuizScore) end) end; SubmitQuizAnswer:FireClient(plr, ok, q.a) end)
+local BadgeService=game:GetService("BadgeService"); local LUNAR_BADGE_ID=0
+DonateMuseumItem.OnServerEvent:Connect(function(plr, item, amount) local p=Profiles[plr.UserId]; if not p then return end; amount=math.clamp(tonumber(amount) or 0,1,99); if (p.Inventory[item] or 0) < amount then return end; p.Inventory[item]=(p.Inventory[item] or 0)-amount; local mat=require(Shared.ItemsConfig).Materials[item] or {value=50}; p.Cash=(p.Cash or 0)+((mat.value or 50)*amount*2); plr.leaderstats[require(Shared.ItemsConfig).CURRENCY_NAME].Value=p.Cash; if item=="LunarSample" and LUNAR_BADGE_ID~=0 then pcall(function() if not BadgeService:UserHasBadgeAsync(plr.UserId,LUNAR_BADGE_ID) then BadgeService:AwardBadge(plr.UserId,LUNAR_BADGE_ID) end end) end end)
+CollectOre.OnServerEvent:Connect(function(plr, item) local p=Profiles[plr.UserId]; if not p then return end; if not require(Shared.ItemsConfig).Materials[item] then return end; p.Inventory[item]=(p.Inventory[item] or 0)+1 end)
+local function rr(a,b) return math.random(a,b) end
+CollectNode.OnServerEvent:Connect(function(plr, key) local p=Profiles[plr.UserId]; if not p then return end; local pool=require(Shared.DropRatesConfig)[key]; if not pool then return end; for _,e in ipairs(pool) do if math.random()<(e.chance or 0) then local amt=rr(e.amount.min, e.amount.max); if require(Shared.ItemsConfig).Materials[e.item] then p.Inventory[e.item]=(p.Inventory[e.item] or 0)+amt end end end end)
+RequestTeleportMoon.OnServerEvent:Connect(function(plr) local p=Profiles[plr.UserId]; if not p then return end; if not p.CanGoMoon then return end; if MOON_PLACE_ID==0 then return end; pcall(function() TeleportService:TeleportAsync(MOON_PLACE_ID, {plr}) end) end)]]></ProtectedString>
+<bool name="Disabled">false</bool>
+</Properties>
+</Item>
+<Item class="LocalScript" referent="RBX22">
+<Properties>
+<string name="Name">ClientMain</string>
+<ProtectedString name="Source"><![CDATA[-- Client HUD + Quiz
+local Players=game:GetService("Players"); local ReplicatedStorage=game:GetService("ReplicatedStorage"); local player=Players.LocalPlayer
+local Remotes=ReplicatedStorage:WaitForChild("RemoteEvents")
+local RequestCraft=Remotes:WaitForChild("RequestCraft")
+local RequestPurchaseShip=Remotes:WaitForChild("RequestPurchaseShip")
+local RequestStartQuiz=Remotes:WaitForChild("RequestStartQuiz")
+local SubmitQuizAnswer=Remotes:WaitForChild("SubmitQuizAnswer")
+local DonateMuseumItem=Remotes:WaitForChild("DonateMuseumItem")
+local CollectNode=Remotes:WaitForChild("CollectNode")
+local RequestTeleportMoon=Remotes:WaitForChild("RequestTeleportMoon")
+
+local function ensureGui()
+  local pg=player:WaitForChild("PlayerGui")
+  local HUD=pg:FindFirstChild("HUD")
+  if not HUD then
+    HUD=Instance.new("ScreenGui"); HUD.Name="HUD"; HUD.ResetOnSpawn=false; HUD.Parent=pg
+    local b1=Instance.new("TextButton"); b1.Name="QuizButton"; b1.Text="퀴즈"; b1.Size=UDim2.new(0,120,0,40); b1.Position=UDim2.new(0,20,0,20); b1.Parent=HUD
+    local b2=Instance.new("TextButton"); b2.Name="ShopButton"; b2.Text="상점/제작"; b2.Size=UDim2.new(0,120,0,40); b2.Position=UDim2.new(0,20,0,70); b2.Parent=HUD
+    local b3=Instance.new("TextButton"); b3.Name="InventoryButton"; b3.Text="기부(LunarSample x1)"; b3.Size=UDim2.new(0,200,0,40); b3.Position=UDim2.new(0,20,0,120); b3.Parent=HUD
+    local b4=Instance.new("TextButton"); b4.Name="MoonButton"; b4.Text="달로 이동"; b4.Size=UDim2.new(0,120,0,40); b4.Position=UDim2.new(0,20,0,170); b4.Parent=HUD
+  end
+
+  local QuizUI=pg:FindFirstChild("QuizUI")
+  if not QuizUI then
+    QuizUI=Instance.new("ScreenGui"); QuizUI.Name="QuizUI"; QuizUI.Enabled=false; QuizUI.Parent=pg
+    local f=Instance.new("Frame"); f.Size=UDim2.new(0,400,0,220); f.Position=UDim2.new(0.5,-200,0.5,-110); f.Parent=QuizUI
+    local qt=Instance.new("TextLabel"); qt.Name="QuestionText"; qt.Size=UDim2.new(1,-20,0,60); qt.Position=UDim2.new(0,10,0,10); qt.TextWrapped=true; qt.Parent=f
+    local ab=Instance.new("TextBox"); ab.Name="AnswerBox"; ab.Size=UDim2.new(1,-20,0,40); ab.Position=UDim2.new(0,10,0,80); ab.ClearTextOnFocus=false; ab.Parent=f
+    local submit=Instance.new("TextButton"); submit.Name="SubmitBtn"; submit.Text="제출"; submit.Size=UDim2.new(0,100,0,40); submit.Position=UDim2.new(0,10,0,130); submit.Parent=f
+    local close=Instance.new("TextButton"); close.Name="CloseBtn"; close.Text="닫기"; close.Size=UDim2.new(0,100,0,40); close.Position=UDim2.new(0,120,0,130); close.Parent=f
+    local res=Instance.new("TextLabel"); res.Name="ResultText"; res.Size=UDim2.new(1,-20,0,30); res.Position=UDim2.new(0,10,0,180); res.Parent=f
+  end
+end
+ensureGui()
+
+local pg=player:WaitForChild("PlayerGui")
+local HUD=pg:WaitForChild("HUD")
+local QuizUI=pg:WaitForChild("QuizUI")
+
+HUD.QuizButton.MouseButton1Click:Connect(function() RequestStartQuiz:FireServer(); QuizUI.Enabled=true end)
+HUD.ShopButton.MouseButton1Click:Connect(function() RequestPurchaseShip:FireServer("Scout-I") end)
+HUD.InventoryButton.MouseButton1Click:Connect(function() DonateMuseumItem:FireServer("LunarSample", 1) end)
+HUD.MoonButton.MouseButton1Click:Connect(function() RequestTeleportMoon:FireServer() end)
+
+RequestStartQuiz.OnClientEvent:Connect(function(qText)
+  local qt=QuizUI:WaitForChild("QuestionText"); local ab=QuizUI:WaitForChild("AnswerBox"); local res=QuizUI:WaitForChild("ResultText")
+  res.Text=""; ab.Text=""; qt.Text=qText or "문제를 불러오는 중..."
+end)
+QuizUI.SubmitBtn.MouseButton1Click:Connect(function() SubmitQuizAnswer:FireServer(QuizUI.AnswerBox.Text) end)
+SubmitQuizAnswer.OnClientEvent:Connect(function(correct, correctAnswer)
+  local res=QuizUI.ResultText
+  if correct then res.Text="정답! 보상을 획득했습니다." else res.Text="오답! 정답: "..tostring(correctAnswer) end
+end)
+]]></ProtectedString>
+<bool name="Disabled">false</bool>
+</Properties>
+</Item>
+</Item>
+</roblox>
