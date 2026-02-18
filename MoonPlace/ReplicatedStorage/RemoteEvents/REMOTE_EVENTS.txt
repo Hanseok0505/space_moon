@@ -1,2 +1,7 @@
-Create this RemoteEvent in MoonPlace (ReplicatedStorage/RemoteEvents):
+﻿MoonPlace RemoteEvents
+======================
 RequestTeleportBack
+RequestState
+
+Notes:
+- RequestState is used for automatic sync + manual refresh.

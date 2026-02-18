@@ -1,9 +1,19 @@
-Create these RemoteEvents in MainPlace (ReplicatedStorage/RemoteEvents):
+﻿MainPlace RemoteEvents
+======================
 RequestCraft
 RequestPurchaseShip
+RequestEquipShip
 RequestStartQuiz
 SubmitQuizAnswer
 DonateMuseumItem
 CollectOre
 CollectNode
 RequestTeleportMoon
+GetPlayerState
+RequestMuseumData
+
+Notes:
+- RequestTeleportMoon optional arg: shipId. If omitted, equipped ship is used.
+- GetPlayerState now also returns:
+  - shipCooldowns: { [shipId] = nextAvailableUnixTime } for shared pad cooldowns.
+- All events are created at runtime if missing.
