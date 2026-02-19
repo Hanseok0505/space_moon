@@ -55,6 +55,10 @@ end
 
 local ROOT_PLACE_ID = resolveRootPlaceId()
 
+local FALLBACK_SPAWN_NAME = "MoonSpawnPoint"
+local FALLBACK_SPAWN_SIZE = Vector3.new(10, 1, 10)
+local FALLBACK_SPAWN_POS = Vector3.new(0, 2, -65)
+
 local SYNC_INTERVAL = 6
 local NODE_COOLDOWN_SECONDS = 3
 
@@ -205,6 +209,62 @@ local function pickDrops(poolName)
   return drops
 end
 
+local function ensureMoonSpawnPoint()
+  local existing = Workspace:FindFirstChild(FALLBACK_SPAWN_NAME)
+  if existing and existing:IsA("SpawnLocation") then
+    return existing
+  end
+
+  local spawn = Instance.new("SpawnLocation")
+  spawn.Name = FALLBACK_SPAWN_NAME
+  spawn.Size = FALLBACK_SPAWN_SIZE
+  spawn.CFrame = CFrame.new(FALLBACK_SPAWN_POS)
+  spawn.Anchored = true
+  spawn.CanCollide = true
+  spawn.CanTouch = false
+  spawn.Transparency = 1
+  spawn.Neutral = true
+  spawn.Enabled = true
+  spawn.Archivable = false
+  spawn.Parent = Workspace
+
+  return spawn
+end
+
+local function applyCharacterGrounding(character)
+  if not character then
+    return
+  end
+
+  local spawnPoint = ensureMoonSpawnPoint()
+  local hrp = character:WaitForChild("HumanoidRootPart", 3)
+  if not hrp then
+    return
+  end
+
+  local targetY = spawnPoint.Position.Y + (spawnPoint.Size.Y / 2) + 2
+  local targetCFrame = CFrame.new(spawnPoint.Position.X, targetY, spawnPoint.Position.Z)
+
+  pcall(function()
+    hrp.AssemblyLinearVelocity = Vector3.zero
+    hrp.AssemblyAngularVelocity = Vector3.zero
+  end)
+  pcall(function()
+    hrp.Velocity = Vector3.zero
+    hrp.RotVelocity = Vector3.zero
+  end)
+
+  hrp.CFrame = targetCFrame
+end
+
+local function bindCharacterAdded(player)
+  player.CharacterAdded:Connect(function(character)
+    task.defer(function()
+      applyCharacterGrounding(character)
+    end)
+  end)
+end
+
 local function ensureScene()
   if Workspace:FindFirstChild("MoonSceneBuilt") then
     return
@@ -314,7 +374,13 @@ end
 
 ensureScene()
 
-Players.PlayerAdded:Connect(playerLoad)
+local spawnPad = ensureMoonSpawnPoint()
+Players.RespawnLocation = spawnPad
+
+Players.PlayerAdded:Connect(function(player)
+  playerLoad(player)
+  bindCharacterAdded(player)
+end)
 Players.PlayerRemoving:Connect(playerRemove)
 
 task.spawn(function()
