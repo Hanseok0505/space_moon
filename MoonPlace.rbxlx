@@ -91,7 +91,7 @@ return Drops
 <Properties>
 <string name="Name">MoonServer</string>
 <bool name="Disabled">false</bool>
-<ProtectedString name="Source"><![CDATA[-- ServerScriptService/MoonServer.server.lua
+<ProtectedString name="Source"><![CDATA[-- MoonPlace/ServerScriptService/MoonServer.server.lua
 local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -107,6 +107,14 @@ local DropRates = require(Shared:WaitForChild("DropRatesConfig"))
 
 local PROFILE_KEY = "SpaceGameProfile_V1"
 local ROOT_PLACE_ID = 0 -- set Main place ID here
+
+local function resolveRootPlaceId()
+  local attrId = game:GetAttribute("RootPlaceId")
+  if typeof(attrId) == "number" and attrId > 0 then
+    return math.floor(attrId)
+  end
+  return ROOT_PLACE_ID
+end
 
 local store = DataStoreService:GetDataStore(PROFILE_KEY)
 local Profiles = {}
@@ -150,7 +158,12 @@ local function ensureScene()
   local base=createPart("MoonBase", Color3.fromRGB(200,200,200), Vector3.new(200,2,200), Vector3.new(0,0,0))
   local portal=createPart("ReturnPortal", Color3.fromRGB(0,170,255), Vector3.new(8,10,1), Vector3.new(0,6,-80)); portal.Material=Enum.Material.Neon
   local pp=Instance.new("ProximityPrompt"); pp.ActionText="귀환(메인)"; pp.ObjectText="포털"; pp.HoldDuration=0; pp.Parent=portal
-  pp.Triggered:Connect(function(plr) if ROOT_PLACE_ID~=0 then pcall(function() TeleportService:TeleportAsync(ROOT_PLACE_ID,{plr}) end) end end)
+  pp.Triggered:Connect(function(plr)
+    local rootPlaceId = resolveRootPlaceId()
+    if rootPlaceId ~= 0 then
+      pcall(function() TeleportService:TeleportAsync(rootPlaceId, {plr}) end)
+    end
+  end)
   local posList={Vector3.new(-40,2,30), Vector3.new(20,2,40), Vector3.new(60,2,-10)}
   for i,pos in ipairs(posList) do
     local node=createPart("LunarNode_"..i, Color3.fromRGB(240,240,240), Vector3.new(6,6,6), pos); node.Material=Enum.Material.Slate
@@ -168,8 +181,9 @@ ensureScene()
 
 -- Return button support
 RequestTeleportBack.OnServerEvent:Connect(function(plr)
-  if ROOT_PLACE_ID==0 then return end
-  pcall(function() TeleportService:TeleportAsync(ROOT_PLACE_ID, {plr}) end)
+  local rootPlaceId = resolveRootPlaceId()
+  if rootPlaceId == 0 then return end
+  pcall(function() TeleportService:TeleportAsync(rootPlaceId, {plr}) end)
 end)
 ]]></ProtectedString>
 </Properties>
@@ -187,7 +201,7 @@ end)
 <Properties>
 <string name="Name">MoonClient</string>
 <bool name="Disabled">false</bool>
-<ProtectedString name="Source"><![CDATA[-- StarterPlayer/StarterPlayerScripts/MoonClient.client.lua
+<ProtectedString name="Source"><![CDATA[-- MoonPlace/StarterPlayer/StarterPlayerScripts/MoonClient.client.lua
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer

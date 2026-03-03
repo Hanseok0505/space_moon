@@ -1,52 +1,43 @@
-# Space Moon (Roblox)
+# Space → Moon v3 (Main & Moon with Round-trip Teleport and Auto Scene)
 
-지구에서 시작해 달로 이동해 자원을 채집하고, 박물관에 전시하는 멀티플레이 게임입니다.
+## 두 플레이스 사용법
+1. **MainPlace**와 **MoonPlace**를 각각 Publish하여 PlaceId를 확보합니다.
+2. 권장: 게임 Attribute로 PlaceId를 설정합니다.
+   - MainPlace: `MoonPlaceId` (Number) = MoonPlace PlaceId
+   - MoonPlace: `RootPlaceId` (Number) = MainPlace PlaceId
+3. 기존 상수(`MOON_PLACE_ID`, `ROOT_PLACE_ID`)를 직접 수정해도 작동합니다.
+4. 두 플레이스 모두 `Game Settings → Security → Enable Studio Access to API Services` 체크(DataStore).
 
-## 실행/배포 핵심 흐름
+## 즉시 플레이 가능한 기본 월드
+- MainPlace는 서버 시작 시 자동으로 다음을 보정 생성합니다.
+- `EarthGround` 지면
+- `MainSpawn` 스폰 위치(없을 때만 생성)
+- `IronNode/TitaniumNode` 채집 노드
+- `MuseumPad` 박물관 구역 바닥
 
-1. `MainPlace.rbxlx` 열기
-2. `MainPlace`에서 최신 스크립트 반영
-   - `MainPlace/ServerScriptService/MainServer.server.lua`
-   - `MainPlace/StarterPlayer/StarterPlayerScripts/ClientMain.client.lua`
-3. `MoonPlace.rbxlx` 열기
-4. `MoonPlace/ServerScriptService/MoonServer.server.lua`
-5. `MoonPlace/StarterPlayer/StarterPlayerScripts/MoonClient.client.lua`
-6. PlaceId 설정
-   - MainPlace: `MOON_PLACE_ID`
-   - MoonPlace: `ROOT_PLACE_ID`
-7. 두 Place를 각각 Publish
-8. Security: `Enable Studio Access to API Services` 활성화
+## RemoteEvents 생성
+- MainPlace: `RequestCraft`, `RequestPurchaseShip`, `RequestStartQuiz`, `SubmitQuizAnswer`, `DonateMuseumItem`, `CollectOre`, `CollectNode`, `RequestTeleportMoon`
+- MoonPlace: `RequestTeleportBack`
 
-## PlaceId 설정 방법(둘 다 가능)
+## MoonPlace 자동 씬
+서버가 다음을 자동 생성합니다.
+- 바닥 플랫폼
+- **ReturnPortal** (ProximityPrompt로 메인 귀환)
+- **LunarNode x3** (ProximityPrompt로 월면 채집, 드랍률은 `DropRatesConfig.lua`의 `LunarNode` 적용)
 
-- 권장: Place의 `Attributes`로 설정
-  - MainPlace: `MOON_PLACE_ID` (Number)
-  - MoonPlace: `ROOT_PLACE_ID` (Number)
-- 또는 `ReplicatedStorage/Shared/PlaceConfig.lua` 수정
+## 프로필/저장
+- 두 플레이스 모두 같은 `SpaceGameProfile_V1` DataStore를 사용하여 현금/인벤/점수 유지.
 
-## 자동 동기화/멀티 UX
+## 주간 랭킹(메인)
+- OrderedDataStore `QuizWeekly_Leaderboard_V1` 저장(표시는 커스텀 UI 필요).
 
-- Earth HUD: `GetPlayerState` 자동 동기화(4초 간격)
-- Moon HUD: `RequestState` 자동 동기화(6초 간격)
-- 우주선 구매/장착은 서버 검증 후 즉시 반영
-- 동일 우주선 패드 쿨다운을 공유해 다중 사용자 충돌 완화
+## 배포 전 점검 체크리스트
+1. MainPlace 플레이 시 캐릭터가 `MainSpawn`에서 시작하고 추락하지 않는지 확인
+2. `퀴즈` 버튼: 문제 수신, 답 제출, 정/오답 문구 표시 확인
+3. `상점/제작` 버튼: 창 토글 및 버튼 클릭 시 서버 오류 없는지 확인
+4. `달로 이동` 버튼: Lunar-Module 구매 후 텔레포트되는지 확인
+5. MoonPlace에서 `ReturnPortal` 및 `메인으로 귀환` 버튼으로 왕복 가능한지 확인
+6. Moon 노드 채집 후 재입장 시 인벤/현금(DataStore) 유지 확인
+7. Creator Dashboard에서 아이콘/썸네일/설명/장르/연령등급/기기 호환 설정 완료 확인
 
-## 배포 전 점검
-
-- 달 이동 버튼은 월면 운행 가능 우주선만 활성화
-- 여러 계정 동시 접속 시 노드 채집/구매/기부 동시성 확인
-- MOON/ROOT_PLACE_ID 미설정 시 경고 메시지 확인
-
-## 변경 핵심
-
-- `MainServer.server.lua`
-  - `RequestEquipShip`, `RequestTeleportMoon` 강화
-  - `shipCooldowns` 전달 및 상태 동기화 보강
-  - 액션 스팸 방지 쿨다운 추가
-- `ClientMain.client.lua`
-  - 우주선 리스트 상태/버튼 처리 강화
-  - 실패 사유 토스트
-- `MoonServer.server.lua` / `MoonClient.client.lua`
-  - 노드 채집/귀환 동기화 및 PlaceId 폴백 지원
-- `QuizzesConfig.lua`
-  - 퀴즈 텍스트 인코딩 정리
+Have fun! 🚀🌙

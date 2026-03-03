@@ -4,6 +4,64 @@
 <Properties>
 <string name="Name">MainPlace</string>
 </Properties>
+<Item class="Workspace" referent="RBX1000">
+<Properties>
+<string name="Name">Workspace</string>
+</Properties>
+<Item class="Part" referent="RBX1001">
+<Properties>
+<string name="Name">EarthGround</string>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<CoordinateFrame name="CFrame">
+<X>0</X>
+<Y>-3</Y>
+<Z>0</Z>
+<R00>1</R00>
+<R01>0</R01>
+<R02>0</R02>
+<R10>0</R10>
+<R11>1</R11>
+<R12>0</R12>
+<R20>0</R20>
+<R21>0</R21>
+<R22>1</R22>
+</CoordinateFrame>
+<Vector3 name="size">
+<X>600</X>
+<Y>6</Y>
+<Z>600</Z>
+</Vector3>
+</Properties>
+</Item>
+<Item class="SpawnLocation" referent="RBX1002">
+<Properties>
+<string name="Name">MainSpawn</string>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<bool name="Neutral">true</bool>
+<CoordinateFrame name="CFrame">
+<X>0</X>
+<Y>4</Y>
+<Z>0</Z>
+<R00>1</R00>
+<R01>0</R01>
+<R02>0</R02>
+<R10>0</R10>
+<R11>1</R11>
+<R12>0</R12>
+<R20>0</R20>
+<R21>0</R21>
+<R22>1</R22>
+</CoordinateFrame>
+<Vector3 name="size">
+<X>12</X>
+<Y>1</Y>
+<Z>12</Z>
+</Vector3>
+</Properties>
+</Item>
+</Item>
 <Item class="ReplicatedStorage" referent="RBX1">
 <Properties>
 <string name="Name">ReplicatedStorage</string>
@@ -162,11 +220,12 @@ return Drops
 <Properties>
 <string name="Name">MainServer</string>
 <bool name="Disabled">false</bool>
-<ProtectedString name="Source"><![CDATA[-- ServerScriptService/MainServer.server.lua
+<ProtectedString name="Source"><![CDATA[-- MainPlace/ServerScriptService/MainServer.server.lua
 local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TeleportService = game:GetService("TeleportService")
+local Workspace = game:GetService("Workspace")
 
 local Remotes = ReplicatedStorage:WaitForChild("RemoteEvents")
 local RequestCraft = Remotes:WaitForChild("RequestCraft")
@@ -189,6 +248,14 @@ local PROFILE_KEY = "SpaceGameProfile_V1"
 local WEEKLY_LEADERBOARD = "QuizWeekly_Leaderboard_V1"
 local MOON_PLACE_ID = 0 -- set Moon sub-place ID here
 
+local function resolveMoonPlaceId()
+  local attrId = game:GetAttribute("MoonPlaceId")
+  if typeof(attrId) == "number" and attrId > 0 then
+    return math.floor(attrId)
+  end
+  return MOON_PLACE_ID
+end
+
 local store = DataStoreService:GetDataStore(PROFILE_KEY)
 local orderedWeekly = DataStoreService:GetOrderedDataStore(WEEKLY_LEADERBOARD)
 local function currentWeekNumber() return math.floor(os.time() / 604800) end
@@ -207,6 +274,57 @@ local function getLeaderstats(player)
 end
 
 local Profiles = {}
+
+local function createWorldPart(name, color, size, position, material)
+  local part = Instance.new("Part")
+  part.Name = name
+  part.Anchored = true
+  part.CanCollide = true
+  part.Size = size
+  part.Position = position
+  part.Color = color
+  part.Material = material or Enum.Material.SmoothPlastic
+  part.Parent = Workspace
+  return part
+end
+
+local function ensureMainScene()
+  if Workspace:FindFirstChild("MainSceneBuilt") then
+    return
+  end
+
+  local flag = Instance.new("BoolValue")
+  flag.Name = "MainSceneBuilt"
+  flag.Parent = Workspace
+
+  createWorldPart(
+    "EarthGround",
+    Color3.fromRGB(70, 125, 80),
+    Vector3.new(600, 6, 600),
+    Vector3.new(0, -3, 0),
+    Enum.Material.Grass
+  )
+
+  if not Workspace:FindFirstChildWhichIsA("SpawnLocation") then
+    local spawn = Instance.new("SpawnLocation")
+    spawn.Name = "MainSpawn"
+    spawn.Anchored = true
+    spawn.CanCollide = true
+    spawn.Neutral = true
+    spawn.Size = Vector3.new(12, 1, 12)
+    spawn.Position = Vector3.new(0, 4, 0)
+    spawn.Parent = Workspace
+  end
+
+  local museumPad = createWorldPart(
+    "MuseumPad",
+    Color3.fromRGB(222, 208, 176),
+    Vector3.new(100, 2, 80),
+    Vector3.new(0, 1, 95),
+    Enum.Material.Sandstone
+  )
+  museumPad.CanTouch = true
+end
 
 local function savePlayer(plr)
   local p=Profiles[plr.UserId]; if not p then return end
@@ -301,22 +419,74 @@ CollectOre.OnServerEvent:Connect(function(plr, item)
 end)
 
 local function rr(a,b) return math.random(a,b) end
-CollectNode.OnServerEvent:Connect(function(plr, key)
-  local p=Profiles[plr.UserId]; if not p then return end
-  local pool=DropRates[key]; if not pool then return end
+local function grantDropsToPlayer(profile, nodeKey)
+  local pool = DropRates[nodeKey]
+  if not pool then
+    return
+  end
   for _,e in ipairs(pool) do
-    if math.random()<(e.chance or 0) then
-      local amt=rr(e.amount.min, e.amount.max)
-      if ItemsConfig.Materials[e.item] then p.Inventory[e.item]=(p.Inventory[e.item] or 0)+amt end
+    if math.random() < (e.chance or 0) then
+      local amt = rr(e.amount.min, e.amount.max)
+      if ItemsConfig.Materials[e.item] then
+        profile.Inventory[e.item] = (profile.Inventory[e.item] or 0) + amt
+      end
     end
   end
+end
+
+local function buildMainResourceNodes()
+  if Workspace:FindFirstChild("MainResourceNodesBuilt") then
+    return
+  end
+
+  local flag = Instance.new("BoolValue")
+  flag.Name = "MainResourceNodesBuilt"
+  flag.Parent = Workspace
+
+  local configs = {
+    {name = "IronNode_A", key = "IronNode", pos = Vector3.new(-35, 4, 25), color = Color3.fromRGB(125, 125, 125)},
+    {name = "IronNode_B", key = "IronNode", pos = Vector3.new(-55, 4, 5), color = Color3.fromRGB(125, 125, 125)},
+    {name = "TitaniumNode_A", key = "TitaniumNode", pos = Vector3.new(35, 4, 30), color = Color3.fromRGB(145, 160, 175)},
+  }
+
+  for _,cfg in ipairs(configs) do
+    local node = createWorldPart(cfg.name, cfg.color, Vector3.new(7, 7, 7), cfg.pos, Enum.Material.Rock)
+    local prompt = Instance.new("ProximityPrompt")
+    prompt.ActionText = "채집"
+    prompt.ObjectText = cfg.name
+    prompt.HoldDuration = 0
+    prompt.MaxActivationDistance = 10
+    prompt.Parent = node
+    prompt.Triggered:Connect(function(plr)
+      local profile = Profiles[plr.UserId]
+      if not profile then
+        return
+      end
+      grantDropsToPlayer(profile, cfg.key)
+      prompt.Enabled = false
+      task.delay(1.5, function()
+        if prompt.Parent then
+          prompt.Enabled = true
+        end
+      end)
+    end)
+  end
+end
+
+ensureMainScene()
+buildMainResourceNodes()
+
+CollectNode.OnServerEvent:Connect(function(plr, key)
+  local p=Profiles[plr.UserId]; if not p then return end
+  grantDropsToPlayer(p, key)
 end)
 
 RequestTeleportMoon.OnServerEvent:Connect(function(plr)
   local p=Profiles[plr.UserId]; if not p then return end
   if not p.CanGoMoon then return end
-  if MOON_PLACE_ID==0 then return end
-  pcall(function() TeleportService:TeleportAsync(MOON_PLACE_ID, {plr}) end)
+  local moonPlaceId = resolveMoonPlaceId()
+  if moonPlaceId == 0 then return end
+  pcall(function() TeleportService:TeleportAsync(moonPlaceId, {plr}) end)
 end)
 ]]></ProtectedString>
 </Properties>
@@ -334,7 +504,7 @@ end)
 <Properties>
 <string name="Name">ClientMain</string>
 <bool name="Disabled">false</bool>
-<ProtectedString name="Source"><![CDATA[-- StarterPlayer/StarterPlayerScripts/ClientMain.client.lua
+<ProtectedString name="Source"><![CDATA[-- MainPlace/StarterPlayer/StarterPlayerScripts/ClientMain.client.lua
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
@@ -350,44 +520,65 @@ local CollectNode = Remotes:WaitForChild("CollectNode")
 local RequestTeleportMoon = Remotes:WaitForChild("RequestTeleportMoon")
 
 local function ensureGui()
-  local pg=player:WaitForChild("PlayerGui")
-  local HUD=pg:FindFirstChild("HUD")
+  local pg = player:WaitForChild("PlayerGui")
+  local HUD = pg:FindFirstChild("HUD")
   if not HUD then
-    HUD=Instance.new("ScreenGui"); HUD.Name="HUD"; HUD.ResetOnSpawn=false; HUD.Parent=pg
-    local b1=Instance.new("TextButton"); b1.Name="QuizButton"; b1.Text="퀴즈"; b1.Size=UDim2.new(0,120,0,40); b1.Position=UDim2.new(0,20,0,20); b1.Parent=HUD
-    local b2=Instance.new("TextButton"); b2.Name="ShopButton"; b2.Text="상점/제작"; b2.Size=UDim2.new(0,120,0,40); b2.Position=UDim2.new(0,20,0,70); b2.Parent=HUD
-    local b3=Instance.new("TextButton"); b3.Name="InventoryButton"; b3.Text="기부(LunarSample x1)"; b3.Size=UDim2.new(0,200,0,40); b3.Position=UDim2.new(0,20,0,120); b3.Parent=HUD
-    local b4=Instance.new("TextButton"); b4.Name="MoonButton"; b4.Text="달로 이동"; b4.Size=UDim2.new(0,120,0,40); b4.Position=UDim2.new(0,20,0,170); b4.Parent=HUD
+    HUD = Instance.new("ScreenGui")
+    HUD.Name = "HUD"
+    HUD.ResetOnSpawn = false
+    HUD.Parent = pg
+    local b1 = Instance.new("TextButton"); b1.Name = "QuizButton"; b1.Text = "퀴즈"; b1.Size = UDim2.new(0,120,0,40); b1.Position = UDim2.new(0,20,0,20); b1.Parent = HUD
+    local b2 = Instance.new("TextButton"); b2.Name = "ShopButton"; b2.Text = "상점/제작"; b2.Size = UDim2.new(0,120,0,40); b2.Position = UDim2.new(0,20,0,70); b2.Parent = HUD
+    local b3 = Instance.new("TextButton"); b3.Name = "InventoryButton"; b3.Text = "기부(LunarSample x1)"; b3.Size = UDim2.new(0,200,0,40); b3.Position = UDim2.new(0,20,0,120); b3.Parent = HUD
+    local b4 = Instance.new("TextButton"); b4.Name = "MoonButton"; b4.Text = "달로 이동"; b4.Size = UDim2.new(0,120,0,40); b4.Position = UDim2.new(0,20,0,170); b4.Parent = HUD
   end
 
-  local QuizUI=pg:FindFirstChild("QuizUI")
+  local QuizUI = pg:FindFirstChild("QuizUI")
   if not QuizUI then
-    QuizUI=Instance.new("ScreenGui"); QuizUI.Name="QuizUI"; QuizUI.Enabled=false; QuizUI.Parent=pg
-    local f=Instance.new("Frame"); f.Size=UDim2.new(0,400,0,220); f.Position=UDim2.new(0.5,-200,0.5,-110); f.Parent=QuizUI
-    local qt=Instance.new("TextLabel"); qt.Name="QuestionText"; qt.Size=UDim2.new(1,-20,0,60); qt.Position=UDim2.new(0,10,0,10); qt.TextWrapped=true; qt.Parent=f
-    local ab=Instance.new("TextBox"); ab.Name="AnswerBox"; ab.Size=UDim2.new(1,-20,0,40); ab.Position=UDim2.new(0,10,0,80); ab.ClearTextOnFocus=false; ab.Parent=f
-    local submit=Instance.new("TextButton"); submit.Name="SubmitBtn"; submit.Text="제출"; submit.Size=UDim2.new(0,100,0,40); submit.Position=UDim2.new(0,10,0,130); submit.Parent=f
-    local close=Instance.new("TextButton"); close.Name="CloseBtn"; close.Text="닫기"; close.Size=UDim2.new(0,100,0,40); close.Position=UDim2.new(0,120,0,130); close.Parent=f
-    local res=Instance.new("TextLabel"); res.Name="ResultText"; res.Size=UDim2.new(1,-20,0,30); res.Position=UDim2.new(0,10,0,180); res.Parent=f
+    QuizUI = Instance.new("ScreenGui")
+    QuizUI.Name = "QuizUI"
+    QuizUI.Enabled = false
+    QuizUI.Parent = pg
+    local f = Instance.new("Frame"); f.Name = "Root"; f.Size = UDim2.new(0,400,0,220); f.Position = UDim2.new(0.5,-200,0.5,-110); f.Parent = QuizUI
+    local qt = Instance.new("TextLabel"); qt.Name = "QuestionText"; qt.Size = UDim2.new(1,-20,0,60); qt.Position = UDim2.new(0,10,0,10); qt.TextWrapped = true; qt.Parent = f
+    local ab = Instance.new("TextBox"); ab.Name = "AnswerBox"; ab.Size = UDim2.new(1,-20,0,40); ab.Position = UDim2.new(0,10,0,80); ab.ClearTextOnFocus = false; ab.Parent = f
+    local submit = Instance.new("TextButton"); submit.Name = "SubmitBtn"; submit.Text = "제출"; submit.Size = UDim2.new(0,100,0,40); submit.Position = UDim2.new(0,10,0,130); submit.Parent = f
+    local close = Instance.new("TextButton"); close.Name = "CloseBtn"; close.Text = "닫기"; close.Size = UDim2.new(0,100,0,40); close.Position = UDim2.new(0,120,0,130); close.Parent = f
+    local res = Instance.new("TextLabel"); res.Name = "ResultText"; res.Size = UDim2.new(1,-20,0,30); res.Position = UDim2.new(0,10,0,180); res.Parent = f
   end
 
-  local ShopUI=pg:FindFirstChild("ShopUI")
+  local ShopUI = pg:FindFirstChild("ShopUI")
   if not ShopUI then
-    ShopUI=Instance.new("ScreenGui"); ShopUI.Name="ShopUI"; ShopUI.Enabled=false; ShopUI.Parent=pg
-    local f=Instance.new("Frame"); f.Size=UDim2.new(0,360,0,260); f.Position=UDim2.new(0.5,-180,0.5,-130); f.Parent=ShopUI
-    local s1=Instance.new("TextButton"); s1.Text="구매: Scout-I"; s1.Size=UDim2.new(1,-20,0,40); s1.Position=UDim2.new(0,10,0,10); s1.Parent=f; s1.Name="BuyScout"
-    local s2=Instance.new("TextButton"); s2.Text="구매: Explorer-II"; s2.Size=UDim2.new(1,-20,0,40); s2.Position=UDim2.new(0,10,0,60); s2.Parent=f; s2.Name="BuyExplorer"
-    local s3=Instance.new("TextButton"); s3.Text="구매: Voyager-III"; s3.Size=UDim2.new(1,-20,0,40); s3.Position=UDim2.new(0,10,0,110); s3.Parent=f; s3.Name="BuyVoyager"
-    local s4=Instance.new("TextButton"); s4.Text="구매: Lunar-Module"; s4.Size=UDim2.new(1,-20,0,40); s4.Position=UDim2.new(0,10,0,160); s4.Parent=f; s4.Name="BuyLunar"
-    local c1=Instance.new("TextButton"); c1.Text="제작: BasicEngine"; c1.Size=UDim2.new(1,-20,0,40); c1.Position=UDim2.new(0,10,0,210); c1.Parent=f; c1.Name="CraftEngine"
+    ShopUI = Instance.new("ScreenGui")
+    ShopUI.Name = "ShopUI"
+    ShopUI.Enabled = false
+    ShopUI.Parent = pg
+    local f = Instance.new("Frame"); f.Name = "Root"; f.Size = UDim2.new(0,360,0,260); f.Position = UDim2.new(0.5,-180,0.5,-130); f.Parent = ShopUI
+    local s1 = Instance.new("TextButton"); s1.Text = "구매: Scout-I"; s1.Size = UDim2.new(1,-20,0,40); s1.Position = UDim2.new(0,10,0,10); s1.Parent = f; s1.Name = "BuyScout"
+    local s2 = Instance.new("TextButton"); s2.Text = "구매: Explorer-II"; s2.Size = UDim2.new(1,-20,0,40); s2.Position = UDim2.new(0,10,0,60); s2.Parent = f; s2.Name = "BuyExplorer"
+    local s3 = Instance.new("TextButton"); s3.Text = "구매: Voyager-III"; s3.Size = UDim2.new(1,-20,0,40); s3.Position = UDim2.new(0,10,0,110); s3.Parent = f; s3.Name = "BuyVoyager"
+    local s4 = Instance.new("TextButton"); s4.Text = "구매: Lunar-Module"; s4.Size = UDim2.new(1,-20,0,40); s4.Position = UDim2.new(0,10,0,160); s4.Parent = f; s4.Name = "BuyLunar"
+    local c1 = Instance.new("TextButton"); c1.Text = "제작: BasicEngine"; c1.Size = UDim2.new(1,-20,0,40); c1.Position = UDim2.new(0,10,0,210); c1.Parent = f; c1.Name = "CraftEngine"
   end
 end
 ensureGui()
 
-local pg=player:WaitForChild("PlayerGui")
-local HUD=pg:WaitForChild("HUD")
-local QuizUI=pg:WaitForChild("QuizUI")
-local ShopUI=pg:WaitForChild("ShopUI")
+local pg = player:WaitForChild("PlayerGui")
+local HUD = pg:WaitForChild("HUD")
+local QuizUI = pg:WaitForChild("QuizUI")
+local ShopUI = pg:WaitForChild("ShopUI")
+local quizRoot = QuizUI:WaitForChild("Root")
+local shopRoot = ShopUI:WaitForChild("Root")
+local questionText = quizRoot:WaitForChild("QuestionText")
+local answerBox = quizRoot:WaitForChild("AnswerBox")
+local resultText = quizRoot:WaitForChild("ResultText")
+local submitBtn = quizRoot:WaitForChild("SubmitBtn")
+local closeBtn = quizRoot:WaitForChild("CloseBtn")
+local buyScoutBtn = shopRoot:WaitForChild("BuyScout")
+local buyExplorerBtn = shopRoot:WaitForChild("BuyExplorer")
+local buyVoyagerBtn = shopRoot:WaitForChild("BuyVoyager")
+local buyLunarBtn = shopRoot:WaitForChild("BuyLunar")
+local craftEngineBtn = shopRoot:WaitForChild("CraftEngine")
 
 HUD.QuizButton.MouseButton1Click:Connect(function() RequestStartQuiz:FireServer(); QuizUI.Enabled=true end)
 HUD.ShopButton.MouseButton1Click:Connect(function() ShopUI.Enabled = not ShopUI.Enabled end)
@@ -395,21 +586,25 @@ HUD.InventoryButton.MouseButton1Click:Connect(function() DonateMuseumItem:FireSe
 HUD.MoonButton.MouseButton1Click:Connect(function() RequestTeleportMoon:FireServer() end)
 
 RequestStartQuiz.OnClientEvent:Connect(function(qText)
-  local qt=QuizUI:WaitForChild("QuestionText"); local ab=QuizUI:WaitForChild("AnswerBox"); local res=QuizUI:WaitForChild("ResultText")
-  res.Text=""; ab.Text=""; qt.Text=qText or "문제를 불러오는 중..."
+  resultText.Text = ""
+  answerBox.Text = ""
+  questionText.Text = qText or "문제를 불러오는 중..."
 end)
-QuizUI.SubmitBtn.MouseButton1Click:Connect(function() SubmitQuizAnswer:FireServer(QuizUI.AnswerBox.Text) end)
+submitBtn.MouseButton1Click:Connect(function() SubmitQuizAnswer:FireServer(answerBox.Text) end)
 SubmitQuizAnswer.OnClientEvent:Connect(function(correct, correctAnswer)
-  local res=QuizUI.ResultText
-  if correct then res.Text="정답! 보상을 획득했습니다." else res.Text="오답! 정답: "..tostring(correctAnswer) end
+  if correct then
+    resultText.Text = "정답! 보상을 획득했습니다."
+  else
+    resultText.Text = "오답! 정답: " .. tostring(correctAnswer)
+  end
 end)
-QuizUI.CloseBtn.MouseButton1Click:Connect(function() QuizUI.Enabled=false end)
+closeBtn.MouseButton1Click:Connect(function() QuizUI.Enabled=false end)
 
-ShopUI.BuyScout.MouseButton1Click:Connect(function() RequestPurchaseShip:FireServer("Scout-I") end)
-ShopUI.BuyExplorer.MouseButton1Click:Connect(function() RequestPurchaseShip:FireServer("Explorer-II") end)
-ShopUI.BuyVoyager.MouseButton1Click:Connect(function() RequestPurchaseShip:FireServer("Voyager-III") end)
-ShopUI.BuyLunar.MouseButton1Click:Connect(function() RequestPurchaseShip:FireServer("Lunar-Module") end)
-ShopUI.CraftEngine.MouseButton1Click:Connect(function() RequestCraft:FireServer("BasicEngine") end)
+buyScoutBtn.MouseButton1Click:Connect(function() RequestPurchaseShip:FireServer("Scout-I") end)
+buyExplorerBtn.MouseButton1Click:Connect(function() RequestPurchaseShip:FireServer("Explorer-II") end)
+buyVoyagerBtn.MouseButton1Click:Connect(function() RequestPurchaseShip:FireServer("Voyager-III") end)
+buyLunarBtn.MouseButton1Click:Connect(function() RequestPurchaseShip:FireServer("Lunar-Module") end)
+craftEngineBtn.MouseButton1Click:Connect(function() RequestCraft:FireServer("BasicEngine") end)
 ]]></ProtectedString>
 </Properties>
 </Item>
